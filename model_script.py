@@ -1,4 +1,4 @@
-VERSION = '0.1'
+VERSION = '0.2'
 """
 https://github.com/xuebinqin/DIS
 https://github.com/HUANGYming/DIS-A100-4090
@@ -15,8 +15,8 @@ import torch.nn.functional as F
 import torch.nn as nn
 from huggingface_hub import hf_hub_download
 
-from data_loader_cache import normalize, im_preprocess 
-from models import *
+from data_loader_cache import normalize, im_preprocess
+from models_isnet import ISNetDIS
 
 
 class GOSNormalize(object):
