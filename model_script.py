@@ -1,6 +1,7 @@
-VERSION = '0'
+VERSION = '0.1'
 """
 https://github.com/xuebinqin/DIS
+https://github.com/HUANGYming/DIS-A100-4090
 https://huggingface.co/spaces/doevent/dis-background-removal/blob/main/app.py
 """
 import os
@@ -60,10 +61,8 @@ class ModelHandler:
         image_tensor, orig_size = self.load_image(input_image_np)
         mask = self.predict(image_tensor, orig_size)
         pil_mask = Image.fromarray(mask).convert('L')
-        im_rgb = input_image.convert("RGB")
-        im_rgba = im_rgb.copy()
-        im_rgba.putalpha(pil_mask)
-        return [im_rgba, pil_mask]
+        
+        return pil_mask
 
     def build_hypar(self) -> dict:
         """ Set Parameters """
@@ -153,14 +152,16 @@ if __name__ == '__main__':
     img = Image.open("_temp.png").convert("RGB")
     input_data = {"input_image": img}
     output = model.get_prediction(input_data)
-    print(type(output[0]))
-    print(type(output[1]))
+    im_rgb = img.convert("RGB")
+    im_rgba = im_rgb.copy()
+    im_rgba.putalpha(output)
+    print(type(output))
     print("Masked image:")
-    display(output[0]) # masked
+    display(im_rgba) # masked
     print("Mask:")
-    display(output[1]) # mask
+    display(output) # mask
 
-    im0 = output[0].save("masked.png") 
-    im1 = output[1].save("mask.png") 
+    im0 = im_rgba.save("masked.png") 
+    im1 = output.save("mask.png") 
 
     print('END')
