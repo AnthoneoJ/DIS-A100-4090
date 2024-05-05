@@ -1,4 +1,4 @@
-VERSION = '0.2'
+VERSION = '1.0'
 """
 https://github.com/xuebinqin/DIS
 https://github.com/HUANGYming/DIS-A100-4090
