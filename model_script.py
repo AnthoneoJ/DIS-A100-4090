@@ -1,5 +1,6 @@
-VERSION = '1.0'
+VERSION = '1.1'
 """
+- Output both transformed image and mask as a list
 https://github.com/xuebinqin/DIS
 https://github.com/HUANGYming/DIS-A100-4090
 https://huggingface.co/spaces/doevent/dis-background-removal/blob/main/app.py
@@ -62,7 +63,11 @@ class ModelHandler:
         mask = self.predict(image_tensor, orig_size)
         pil_mask = Image.fromarray(mask).convert('L')
         
-        return pil_mask
+        im_rgb = input_image.convert("RGB")
+        im_rgba = im_rgb.copy()
+        im_rgba.putalpha(pil_mask)
+        
+        return [im_rgba, pil_mask]
 
     def build_hypar(self) -> dict:
         """ Set Parameters """
@@ -151,7 +156,8 @@ if __name__ == '__main__':
     urllib.request.urlretrieve(url,"_temp.png")
     img = Image.open("_temp.png").convert("RGB")
     input_data = {"input_image": img}
-    output = model.get_prediction(input_data)
+    outputs = model.get_prediction(input_data)
+    output = outputs[1]
     im_rgb = img.convert("RGB")
     im_rgba = im_rgb.copy()
     im_rgba.putalpha(output)
