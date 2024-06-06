@@ -1,13 +1,17 @@
-VERSION = '1.1'
+VERSION = '1.2.0'
 """
-- Output both transformed image and mask as a list
+- Download image if URL given as input
+- Handle bad URL
+- Add requests requirement
 https://github.com/xuebinqin/DIS
 https://github.com/HUANGYming/DIS-A100-4090
 https://huggingface.co/spaces/doevent/dis-background-removal/blob/main/app.py
 """
-import os
-from PIL import Image
+import os, traceback
+from PIL import Image, ImageDraw, ImageFont
+from io import BytesIO
 
+import requests
 import numpy as np
 import torch
 from torchvision import transforms
@@ -18,6 +22,30 @@ from huggingface_hub import hf_hub_download
 
 from data_loader_cache import normalize, im_preprocess
 from models_isnet import ISNetDIS
+
+
+def text_to_image(text: str) -> Image.Image:
+    font = ImageFont.load_default()
+
+    # Create a temporary ImageDraw object to calculate the text size
+    temp_image = Image.new('RGB', (1, 1))
+    draw = ImageDraw.Draw(temp_image)
+
+    # Calculate the text width and height
+    text_width, text_height = draw.textsize(text, font=font)
+
+    # Create a new image with the calculated size and white background
+    width = text_width + 5
+    height = text_height + 5
+    image = Image.new('RGB', (width, height), color='white')
+    draw = ImageDraw.Draw(image)
+
+    # Draw the text on the image
+    x = (width - text_width) / 2
+    y = (height - text_height) / 2
+    draw.text((x, y), text, fill='black', font=font)
+
+    return image
 
 
 class GOSNormalize(object):
@@ -54,8 +82,17 @@ class ModelHandler:
         self.transform =  transforms.Compose([GOSNormalize([0.5,0.5,0.5],[1.0,1.0,1.0])])
         self.net = self.build_model()
 
-    def get_prediction(self, input_data: dict) -> Image.Image:
-        input_image: Image.Image = input_data["input_image"]
+    def get_prediction(self, input_data: dict):
+        input_text: str = input_data["input_text"]
+        if input_text and input_text.lower()!="placeholder":
+            try:
+                response = requests.get(input_text)
+                input_image = Image.open(BytesIO(response.content))
+            except Exception as e:
+                text = str(traceback.format_exc())
+                return text_to_image(text)
+        else:
+            input_image: Image.Image = input_data["input_image"]
         if input_image.mode != "RGB":
             input_image = input_image.convert("RGB")
         input_image_np = np.array(input_image)

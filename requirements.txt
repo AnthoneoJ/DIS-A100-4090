@@ -4,3 +4,4 @@ scikit-image
 torch
 torchvision
 tqdm
+requests
