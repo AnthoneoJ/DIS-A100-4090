@@ -1,15 +1,14 @@
-VERSION = '1.2.1'
+VERSION = '1.3.0'
 """
-- Download image if URL given as input
-- Handle bad URL
-- Add requests requirement
-- Use urllib.request.urlretrieve(url,filename) instead of image = Image.open(BytesIO(response.content))
+- Extract image content directly instead of downloading to temp file
 https://github.com/xuebinqin/DIS
 https://github.com/HUANGYming/DIS-A100-4090
 https://huggingface.co/spaces/doevent/dis-background-removal/blob/main/app.py
 """
-import os, traceback, urllib
+import os, traceback
+import urllib.request
 from PIL import Image, ImageDraw, ImageFont
+from io import BytesIO
 
 import numpy as np
 import torch
@@ -85,11 +84,11 @@ class ModelHandler:
         input_text: str = input_data["input_text"]
         if input_text and input_text.lower()!="placeholder":
             try:
-                temp_img_path = "_temp.png"
-                urllib.request.urlretrieve(url,temp_img_path)
-                input_image = Image.open(temp_img_path)
-                if os.path.exists(temp_img_path):
-                    os.remove(temp_img_path)
+                req = urllib.request.Request(url)
+                with urllib.request.urlopen(req) as response:
+                    content = response.read()
+                input_image = Image.open(BytesIO(content)).convert("RGB")
+                del content
             except Exception as e:
                 text = str(traceback.format_exc())
                 return text_to_image(text)
