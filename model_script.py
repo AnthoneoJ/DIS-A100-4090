@@ -1,6 +1,7 @@
-VERSION = '1.3.0'
+VERSION = '1.3.1'
 """
 - Extract image content directly instead of downloading to temp file
+- Add use_batch and batch_size to get_prediction
 https://github.com/xuebinqin/DIS
 https://github.com/HUANGYming/DIS-A100-4090
 https://huggingface.co/spaces/doevent/dis-background-removal/blob/main/app.py
@@ -80,7 +81,7 @@ class ModelHandler:
         self.transform =  transforms.Compose([GOSNormalize([0.5,0.5,0.5],[1.0,1.0,1.0])])
         self.net = self.build_model()
 
-    def get_prediction(self, input_data: dict):
+    def get_prediction(self, input_data: dict, use_batch=False, batch_size=0):
         input_text: str = input_data["input_text"]
         if input_text and input_text.lower()!="placeholder":
             try:
