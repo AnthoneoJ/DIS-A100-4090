@@ -1,8 +1,9 @@
-VERSION = '1.3.2'
+VERSION = '1.3.3'
 """
 - Extract image content directly instead of downloading to temp file
 - Add use_batch and batch_size to get_prediction
 - Add num_instances placeholder argument
+- Add self.model_name
 https://github.com/xuebinqin/DIS
 https://github.com/HUANGYming/DIS-A100-4090
 https://huggingface.co/spaces/doevent/dis-background-removal/blob/main/app.py
@@ -62,11 +63,14 @@ class GOSNormalize(object):
     
 
 class ModelHandler:
-    def __init__(self, num_instances: int = 1, use_gpu: bool = True) -> None:
+    def __init__(self, num_instances: int = 1, use_gpu: bool = True, 
+                 model_name: str = "doevent/dis-background-removal") -> None:
         if use_gpu and torch.cuda.is_available():
             self.device = torch.device("cuda")
         else:
             self.device = torch.device("cpu")
+
+        self.model_name = model_name
 
         self.hypar = self.build_hypar()
 
@@ -76,7 +80,7 @@ class ModelHandler:
             os.makedirs(self.model_dir)
         self.model_path = os.path.join(self.model_dir, self.hypar["restore_model"])
         if not os.path.exists(self.model_path):
-            hf_hub_download(repo_id="doevent/dis-background-removal", repo_type="space", filename="isnet.pth", 
+            hf_hub_download(repo_id=self.model_name, repo_type="space", filename="isnet.pth", 
                             local_dir=self.model_dir)
             
         self.transform =  transforms.Compose([GOSNormalize([0.5,0.5,0.5],[1.0,1.0,1.0])])
